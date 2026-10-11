@@ -5,7 +5,7 @@ Gmail, Outlook/Office 365, Yandex ve standart IMAP/SMTP sunan her sağlayıcıyl
 
 ![Node](https://img.shields.io/badge/node-%3E%3D18-green)
 ![MCP](https://img.shields.io/badge/MCP-stdio-blue)
-![License](https://img.shields.io/badge/license-MIT-lightgrey)
+![License](https://img.shields.io/badge/license-GPL--3.0-blue)
 
 ## ✨ Özellikler
 
@@ -106,4 +106,4 @@ npm run smoke   # MCP handshake + 9 tool listelenir
 
 ## 📄 Lisans
 
-MIT — bkz. [LICENSE](LICENSE).
+GPL-3.0-or-later — bkz. [LICENSE](LICENSE).

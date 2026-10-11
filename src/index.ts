@@ -1,4 +1,11 @@
 #!/usr/bin/env node
+// email-mcp — Generic IMAP/SMTP MCP server for OpenCode.
+// Copyright (C) 2026 omerustundag58
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 // Generic IMAP/SMTP MCP server — OpenCode'da e-posta okuma/gönderme/yönetme.
 // Stdio transport ile çalışır, opencode.jsonc'de "local" server olarak tanımlanır.
 
