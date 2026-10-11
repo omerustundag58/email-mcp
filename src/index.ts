@@ -87,8 +87,12 @@ function ok(data: unknown) {
 // bu yüzden tüm stiller inline yazılır.
 
 function getSignatureMd(): string {
-  // .env'de \n ile çok satır yazılabilir
-  return (env("EMAIL_SIGNATURE", "").replace(/\\n/g, "\n")).trim();
+  // Proje default'u: asistan imzası. EMAIL_SIGNATURE ile ezilir, "off" ile kapatılır.
+  const raw = process.env.EMAIL_SIGNATURE;
+  if (raw !== undefined && raw.toLowerCase() === "off") return "";
+  const val = (raw ?? "").replace(/\\n/g, "\n").trim();
+  if (val) return val;
+  return "Bu e-posta **OpenCode asistanı** tarafından gönderildi 🤖\n[email-mcp](https://github.com/omerustundag58/email-mcp)";
 }
 
 const EMAIL_TAG_STYLES: Record<string, string> = {

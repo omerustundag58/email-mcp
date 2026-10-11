@@ -96,7 +96,7 @@ opencode mcp list   # email connected görmelisin
 inline-CSS'li HTML'e çevirir (Outlook dahil her istemcide düzgün görünür):
 
 - `markdown`: `# başlık`, tablo, alıntı, kod bloğu, link destekler
-- `EMAIL_SIGNATURE` (`.env`): tüm gönderilere otomatik imza ekler, markdown yazılabilir
+- İmza gömülü default'tur (asistan imzası); `EMAIL_SIGNATURE` ile değiştirilir, `off` ile kapatılır
 
 ## ✅ Doğrulama
 
