@@ -98,6 +98,12 @@ inline-CSS'li HTML'e çevirir (Outlook dahil her istemcide düzgün görünür):
 - `markdown`: `# başlık`, tablo, alıntı, kod bloğu, link destekler
 - İmza gömülü default'tur (asistan imzası); `EMAIL_SIGNATURE` ile değiştirilir, `off` ile kapatılır
 
+## 🔔 PROMT trigger
+
+Konusu `PROMT` olan okunmamış mail = asistana talimat. `email_check_promt`
+tool'u bunları getirir ve okundu işaretler (tekrar tetiklenmez).
+Sürekli izleme için: `node watch.mjs 60` (60sn aralıkla kontrol eder).
+
 ## ✅ Doğrulama
 
 ```sh

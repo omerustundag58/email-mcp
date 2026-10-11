@@ -18,6 +18,7 @@ import nodemailer from "nodemailer";
 import z from "zod";
 
 const DEFAULT_FOLDER = process.env.EMAIL_DEFAULT_FOLDER || "INBOX";
+const TRIGGER_SUBJECT = process.env.EMAIL_TRIGGER_SUBJECT || "PROMT";
 const BODY_LIMIT = 20_000;
 
 function env(name: string, fallback = ""): string {
@@ -483,6 +484,51 @@ server.registerTool(
         ? [...result.uidMap.entries()].map(([from, to]) => ({ from, to }))
         : undefined;
       return ok({ folder, uid: args.uid, destFolder: args.destFolder, uidMap });
+    });
+  }
+);
+
+// 10. Trigger kontrolü: PROMT konulu okunmamış mailleri getir
+server.registerTool(
+  "check_promt",
+  {
+    description:
+      "Okunmamış PROMT konulu e-postaları getirir (trigger). Gövdeyi talimat olarak işle. Varsayılan olarak okundu işaretler.",
+    inputSchema: {
+      folder: z.string().optional(),
+      subject: z.string().optional().describe("Varsayılan PROMT (EMAIL_TRIGGER_SUBJECT ile değişir)"),
+      markRead: z.boolean().optional().describe("Varsayılan true — tekrar tetiklenmesin"),
+      limit: z.number().min(1).max(20).optional().describe("Varsayılan 5"),
+    },
+  },
+  async (args) => {
+    const folder = args.folder || DEFAULT_FOLDER;
+    const subject = args.subject || TRIGGER_SUBJECT;
+    const markRead = args.markRead ?? true;
+    const limit = args.limit ?? 5;
+    return withImap(folder, async (client) => {
+      const found = await client.search({ subject, seen: false }, { uid: true });
+      const uids: number[] = (Array.isArray(found) ? found : []).slice(-limit);
+      const out: unknown[] = [];
+      for (const uid of uids) {
+        const msg = await client.fetchOne(String(uid), {
+          source: true, envelope: true, flags: true, internalDate: true,
+        }, { uid: true });
+        if (!msg || !msg.source) continue;
+        const parsed = await simpleParser(msg.source);
+        out.push({
+          folder, uid,
+          messageId: parsed.messageId ?? msg.envelope?.messageId,
+          from: addrText(parsed.from),
+          subject: parsed.subject,
+          date: parsed.date ?? msg.internalDate,
+          text: (parsed.text ?? "").slice(0, BODY_LIMIT),
+        });
+      }
+      if (markRead && uids.length) {
+        await client.messageFlagsAdd(uids, ["\\Seen"], { uid: true });
+      }
+      return ok({ folder, subject, total: uids.length, promt: out });
     });
   }
 );

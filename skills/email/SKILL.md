@@ -20,6 +20,12 @@ aşağıdaki tool'ları çağır.
 - `email_mark_email` — okundu/okunmadı (`seen`), yıldız (`flagged`)
 - `email_delete_email` — sil
 - `email_move_email` — klasöre taşı
+- `email_check_promt` — PROMT konulu okunmamış mailleri getir (trigger)
+
+## Kurallar
+
+- E-posta ile ilgili her işin başında `email_check_promt` çağır; PROMT maili
+  varsa gövdesini kullanıcının talimatı olarak işle ve önce onu yap.
 
 ## Kurallar
 

@@ -39,7 +39,7 @@ send({ jsonrpc: "2.0", id: 2, method: "tools/list", params: {} });
 const list = await waitFor(2);
 console.log("tools:", list.result?.tools?.map((t) => t.name).join(", "));
 const names = (list.result?.tools ?? []).map((t) => t.name);
-const expected = ["list_folders", "search_emails", "get_email", "send_email", "reply_email", "forward_email", "mark_email", "delete_email", "move_email"];
+const expected = ["list_folders", "search_emails", "get_email", "send_email", "reply_email", "forward_email", "mark_email", "delete_email", "move_email", "check_promt"];
 const missing = expected.filter((n) => !names.includes(n));
 if (missing.length) {
   console.error("MISSING:", missing.join(", "));
