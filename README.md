@@ -90,6 +90,14 @@ Sonra:
 opencode mcp list   # email connected görmelisin
 ```
 
+## ✍️ Şık e-posta (markdown + imza)
+
+`send_email`'e düz `text` yerine `markdown` ver — server şık, responsive,
+inline-CSS'li HTML'e çevirir (Outlook dahil her istemcide düzgün görünür):
+
+- `markdown`: `# başlık`, tablo, alıntı, kod bloğu, link destekler
+- `EMAIL_SIGNATURE` (`.env`): tüm gönderilere otomatik imza ekler, markdown yazılabilir
+
 ## ✅ Doğrulama
 
 ```sh

@@ -19,3 +19,5 @@ Bu repo, OpenCode için jenerik IMAP/SMTP MCP server içerir (`src/index.ts`).
 - Yeni tool eklerken `smoke.mjs` içindeki `expected` listesini de güncelle.
 - Şifre/token hiçbir dosyaya yazılmaz; yalnızca ortam değişkenleri (`IMAP_*`, `SMTP_*`).
 - E-posta gövdelerini 20.000 karakterde kes (`BODY_LIMIT`); eklerin sadece metadata'sını döndür.
+- Şık HTML için `markdownToEmailHtml()` kullan; stiller her zaman inline olmalı,
+  `<style>` bloğu yasak (Outlook çöpe atar). `EMAIL_SIGNATURE` tüm gönderilere eklenir.

@@ -3,12 +3,14 @@
     "@modelcontextprotocol/sdk": "^1.17.0",
     "imapflow": "^1.0.175",
     "mailparser": "^3.7.2",
+    "marked": "^18.1.0",
     "nodemailer": "^6.10.1",
     "zod": "^3.23.8"
   },
   "description": "Generic IMAP/SMTP MCP server for OpenCode - read, search, send, reply, manage email",
   "devDependencies": {
     "@types/mailparser": "^3.9.0",
+    "@types/marked": "^5.0.2",
     "@types/node": "^22.0.0",
     "@types/nodemailer": "^6.4.17",
     "typescript": "^5.6.0"

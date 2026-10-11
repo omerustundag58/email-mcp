@@ -14,7 +14,7 @@ aşağıdaki tool'ları çağır.
 - `email_list_folders` — klasörleri listele
 - `email_search_emails` — ara (`from/to/subject/body/since/before/seen/flagged/limit`)
 - `email_get_email` — UID ile tam gövde + ek metadata'sı
-- `email_send_email` — yeni gönderi
+- `email_send_email` — yeni gönderi (`markdown` verilirse şık HTML'e çevrilir)
 - `email_reply_email` — yanıtla (thread korunur, `replyAll` opsiyonel)
 - `email_forward_email` — ilet
 - `email_mark_email` — okundu/okunmadı (`seen`), yıldız (`flagged`)

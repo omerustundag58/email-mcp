@@ -13,6 +13,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { ImapFlow } from "imapflow";
 import { simpleParser } from "mailparser";
+import { marked } from "marked";
 import nodemailer from "nodemailer";
 import z from "zod";
 
@@ -79,6 +80,70 @@ function ok(data: unknown) {
   return {
     content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
   };
+}
+
+// --- Şık HTML e-posta (markdown -> inline CSS) ---
+// E-posta istemcileri <style> bloklarını çöpe atar (özellikle Outlook),
+// bu yüzden tüm stiller inline yazılır.
+
+function getSignatureMd(): string {
+  // .env'de \n ile çok satır yazılabilir
+  return (env("EMAIL_SIGNATURE", "").replace(/\\n/g, "\n")).trim();
+}
+
+const EMAIL_TAG_STYLES: Record<string, string> = {
+  h1: "font-size:24px;line-height:1.3;color:#111827;margin:0 0 16px 0;",
+  h2: "font-size:20px;line-height:1.35;color:#111827;margin:24px 0 12px 0;",
+  h3: "font-size:17px;line-height:1.4;color:#111827;margin:20px 0 10px 0;",
+  p: "margin:0 0 14px 0;",
+  blockquote:
+    "margin:0 0 14px 0;padding:10px 14px;border-left:3px solid #3b82f6;background:#eff6ff;color:#1e40af;",
+  pre: "margin:0 0 14px 0;padding:12px;background:#111827;color:#f9fafb;border-radius:6px;font-size:13px;overflow-x:auto;",
+  code: "font-family:Consolas,Menlo,monospace;font-size:13px;background:#f3f4f6;padding:2px 5px;border-radius:4px;",
+  table: "width:100%;border-collapse:collapse;margin:0 0 14px 0;font-size:14px;",
+  th: "text-align:left;padding:8px 10px;background:#1f2937;color:#ffffff;border:1px solid #374151;",
+  td: "padding:8px 10px;border:1px solid #d1d5db;",
+  ul: "margin:0 0 14px 0;padding-left:22px;",
+  ol: "margin:0 0 14px 0;padding-left:22px;",
+  li: "margin-bottom:6px;",
+  hr: "border:none;border-top:1px solid #e5e7eb;margin:20px 0;",
+  img: "max-width:100%;height:auto;border-radius:6px;",
+};
+
+function inlineEmailStyles(html: string): string {
+  let out = html;
+  for (const [tag, style] of Object.entries(EMAIL_TAG_STYLES)) {
+    out = out.split(`<${tag}>`).join(`<${tag} style="${style}">`);
+  }
+  // nitelikli etiketler
+  out = out.replace(/<a /g, '<a style="color:#2563eb;text-decoration:underline;" ');
+  out = out.replace(/<pre><code( class="[^"]*")?>/g, '<pre style="' + EMAIL_TAG_STYLES.pre + '"><code style="background:transparent;padding:0;color:#f9fafb;"$1>');
+  return out;
+}
+
+async function markdownToEmailHtml(md: string): Promise<string> {
+  const raw = await marked.parse(md, { breaks: true });
+  const body = inlineEmailStyles(raw);
+  return (
+    `<!doctype html><html><body style="margin:0;padding:24px 12px;background-color:#f3f4f6;">` +
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;"><tr><td align="center">` +
+    `<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="border-collapse:collapse;max-width:600px;width:100%;background:#ffffff;border-radius:8px;">` +
+    `<tr><td style="padding:32px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#1f2937;">${body}</td></tr>` +
+    `</table></td></tr></table></body></html>`
+  );
+}
+
+function withSignatureText(t: string | undefined): string | undefined {
+  const sig = getSignatureMd();
+  if (!sig) return t;
+  return `${t ?? ""}\n\n--\n${sig}`;
+}
+
+async function withSignatureHtml(h: string | undefined): Promise<string | undefined> {
+  const sig = getSignatureMd();
+  if (!sig) return h;
+  const sigHtml = inlineEmailStyles(await marked.parse(sig, { breaks: true }));
+  return `${h ?? ""}<br><br><span style="color:#6b7280;">--<br>${sigHtml}</span>`;
 }
 
 function addrText(v: unknown): string {
@@ -230,18 +295,27 @@ server.registerTool(
 server.registerTool(
   "send_email",
   {
-    description: "Yeni e-posta gönderir (SMTP).",
+    description: "Yeni e-posta gönderir (SMTP). markdown verilirse şık HTML'e çevrilir; EMAIL_SIGNATURE varsa imzalanır.",
     inputSchema: {
       to: z.union([z.string(), z.array(z.string())]),
       subject: z.string(),
       text: z.string().optional(),
       html: z.string().optional(),
+      markdown: z.string().optional().describe("Markdown gövde — şık HTML'e çevrilir"),
       cc: z.union([z.string(), z.array(z.string())]).optional(),
       bcc: z.union([z.string(), z.array(z.string())]).optional(),
     },
   },
   async (args) => {
-    if (!args.text && !args.html) throw new Error("text veya html gerekli.");
+    if (!args.text && !args.html && !args.markdown) throw new Error("text, html veya markdown gerekli.");
+    const sig = getSignatureMd();
+    let text = withSignatureText(args.text);
+    let html = await withSignatureHtml(args.html);
+    if (args.markdown) {
+      const fullMd = sig ? `${args.markdown}\n\n---\n${sig}` : args.markdown;
+      html = await markdownToEmailHtml(fullMd);
+      text = text ?? args.markdown;
+    }
     const tx = smtpTransporter();
     const info = await tx.sendMail({
       from: env("SMTP_USER"),
@@ -249,8 +323,8 @@ server.registerTool(
       cc: args.cc ? addrList(args.cc).join(", ") : undefined,
       bcc: args.bcc ? addrList(args.bcc).join(", ") : undefined,
       subject: args.subject,
-      text: args.text,
-      html: args.html,
+      text,
+      html,
     });
     return ok({ messageId: info.messageId, accepted: info.accepted, rejected: info.rejected });
   }
@@ -297,8 +371,8 @@ server.registerTool(
       to,
       cc,
       subject: parsed.subject?.startsWith("Re:") ? parsed.subject : `Re: ${parsed.subject ?? ""}`,
-      text: args.text,
-      html: args.html,
+      text: withSignatureText(args.text),
+      html: await withSignatureHtml(args.html),
       inReplyTo: messageId,
       references: [refs, messageId].filter(Boolean).join(" "),
     });
@@ -330,7 +404,7 @@ server.registerTool(
       from: env("SMTP_USER"),
       to: addrList(args.to).join(", "),
       subject: parsed.subject?.startsWith("Fwd:") ? parsed.subject : `Fwd: ${parsed.subject ?? ""}`,
-      text: `${args.text ?? ""}${quoted}`,
+      text: withSignatureText(`${args.text ?? ""}${quoted}`),
     });
     return ok({ messageId: info.messageId, accepted: info.accepted });
   }
