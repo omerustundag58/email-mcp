@@ -1,0 +1,24 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "servers": {
+      "email": {
+        "type": "local",
+        "command": ["node", "C:/Projeler/email-mcp/dist/index.js"],
+        "environment": {
+          "IMAP_HOST": "{env:IMAP_HOST}",
+          "IMAP_PORT": "{env:IMAP_PORT}",
+          "IMAP_USER": "{env:IMAP_USER}",
+          "IMAP_PASS": "{env:IMAP_PASS}",
+          "IMAP_TLS": "{env:IMAP_TLS}",
+          "SMTP_HOST": "{env:SMTP_HOST}",
+          "SMTP_PORT": "{env:SMTP_PORT}",
+          "SMTP_USER": "{env:SMTP_USER}",
+          "SMTP_PASS": "{env:SMTP_PASS}",
+          "SMTP_SECURE": "{env:SMTP_SECURE}",
+          "EMAIL_DEFAULT_FOLDER": "{env:EMAIL_DEFAULT_FOLDER}"
+        }
+      }
+    }
+  }
+}
