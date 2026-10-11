@@ -150,7 +150,7 @@ server.registerTool(
       if (args.seen !== undefined) query.seen = args.seen;
       if (args.flagged !== undefined) query.flagged = args.flagged;
 
-      const found = await client.search(query);
+      const found = await client.search(query, { uid: true });
       const uids: number[] = Array.isArray(found) ? found : [];
       const latest = uids.slice(-limit).reverse();
       const out: unknown[] = [];
